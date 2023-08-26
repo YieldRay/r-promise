@@ -1,0 +1,23 @@
+{
+    "name": "r-promise",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "directories": {
+        "src": "src",
+        "dist": "dist"
+    },
+    "scripts": {
+        "build": "rm -rf dist && tsc",
+        "test": "tsx test/test.ts",
+        "test-unhandled": "mocha test/unhandled.ts --require ts-node/register"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.1",
+        "@types/node": "^20.5.6",
+        "promises-aplus-tests": "^2.1.2",
+        "ts-node": "^10.9.1",
+        "tsx": "^3.12.7",
+        "typescript": "^5.2.2"
+    }
+}

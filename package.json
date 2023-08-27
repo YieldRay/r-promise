@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "rm -rf dist && tsc",
+        "build-umd": "rollup -f umd --name r_promise -i dist/index.js -o dist/umd.js",
         "test": "tsx test/test.ts",
         "test-unhandled": "mocha test/unhandled.ts --require ts-node/register"
     },

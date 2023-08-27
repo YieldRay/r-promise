@@ -27,11 +27,12 @@ if (typeof queueMicrotask === "function") {
             })
         );
         // run task
-        textNode.textContent = String(++counter);
+        counter = (counter + 1) % 2;
+        textNode.textContent = String(counter);
     };
 } else {
     // unknown
-    nextTick = setTimeout;
+    nextTick = (callback) => setTimeout(callback, 0);
 }
 
 export { nextTick };

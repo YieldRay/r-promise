@@ -145,17 +145,24 @@ export class RPromise<T = any, U = any> {
 
     static promise = new RPromise(() => {});
 
-    static deferred<T = any, U = any>() {
-        const dfd = {} as {
-            resolve: (value: T) => void;
-            reject: (value: U) => void;
-            promise: RPromise<T, U>;
-        };
-        dfd.promise = new RPromise<T, U>((resolve, reject) => {
-            dfd.resolve = resolve;
-            dfd.reject = reject;
+    static withResolvers<T = any, U = any>() {
+        let resolve: (value: T) => void;
+        let reject: (reason: U) => void;
+
+        const promise = new RPromise<T, U>((_resolve, _reject) => {
+            resolve = _resolve;
+            reject = _reject;
         });
-        return dfd;
+
+        // executor(promise constructor callback) is immediately invoked (in sync)
+        // so `resolve` and `reject` are correctly assigned
+        return {
+            promise,
+            //@ts-ignore
+            resolve,
+            //@ts-ignore
+            reject,
+        };
     }
 
     static addUnhandledRejectionCallback(callback: (ev: RPromiseRejectionEvent) => void) {
@@ -178,7 +185,13 @@ function isThenable(x: unknown) {
         const then = Reflect.get(x, "then");
         if (typeof then === "function") return then.bind(x);
 
-        // warn: do not use: then instanceof Function
+        // [warn]
+        // do not use: then instanceof Function
+        // which is a wrong way to check a function
+        // why? because it check prototype rather than check if it is able to invoke
+        // [example]
+        // var o = { __proto__ : Function.prototype }
+        // o instanceof Function // => true
     }
     return false;
 }

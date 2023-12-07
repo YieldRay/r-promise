@@ -1,3 +1,6 @@
+/**
+ * just polyfill for queueMicrotask()
+ */
 let nextTick: (callback: VoidFunction) => void;
 
 if (typeof queueMicrotask === "function") {

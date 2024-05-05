@@ -1,19 +1,42 @@
 /**
- * just polyfill for queueMicrotask()
+ * A example polyfill for queueMicrotask(), this module is NOT side-effect free
+ *
+ * For production, you may want to use polyfill from [core-js](https://github.com/zloirock/core-js/blob/master/packages/core-js/internals/microtask.js)
  */
 let nextTick: (callback: VoidFunction) => void;
+
+declare global {
+    interface Window {
+        MutationObserver: typeof MutationObserver;
+        WebKitMutationObserver: typeof MutationObserver;
+    }
+}
 
 if (typeof queueMicrotask === "function") {
     // standard
     nextTick = queueMicrotask;
+} else if (typeof Promise === "function") {
+    // Promise
+    if (typeof Promise.resolve === "function") {
+        nextTick = (callback) => {
+            Promise.resolve().then(callback);
+        };
+    } else {
+        nextTick = (callback) => {
+            new Promise<void>((resolve) => resolve()).then(callback);
+        };
+    }
 } else if (typeof process === "object" && typeof process.nextTick === "function") {
-    // node
+    // node.js
     nextTick = process.nextTick;
-} else if (typeof window === "object" && typeof window.MutationObserver === "function") {
+} else if (
+    typeof window === "object" &&
+    (typeof window.MutationObserver === "function" || typeof window.WebKitMutationObserver === "function")
+) {
     // browser
     let counter = 0;
     const tasks: Array<VoidFunction> = []; // task queue
-    const observer = new MutationObserver(() => {
+    const observer = new (window.MutationObserver || window.WebKitMutationObserver)(() => {
         for (const task of tasks) {
             task();
         }

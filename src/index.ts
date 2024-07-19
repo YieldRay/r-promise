@@ -162,6 +162,115 @@ export class RPromise<T = any, U = any> {
         };
     }
 
+    static all<T>(iterable: Iterable<T | PromiseLike<T>>): RPromise<Awaited<T>[]> {
+        return new RPromise<Awaited<T>[]>((resolve, reject) => {
+            const values: Awaited<T>[] = [];
+            let remainingElementsCount = 1; // start with 1 to handle the edge case of an empty iterable
+            let index = 0;
+
+            for (const item of iterable) {
+                const currentIndex = index++;
+                remainingElementsCount++;
+
+                RPromise.resolve(item).then(
+                    (value) => {
+                        values[currentIndex] = value;
+
+                        if (--remainingElementsCount === 0) {
+                            resolve(values);
+                        }
+                    },
+                    (reason) => {
+                        reject(reason);
+                    }
+                );
+            }
+
+            // decrement for the initial increment
+            if (--remainingElementsCount === 0) {
+                resolve(values);
+            }
+        });
+    }
+
+    static allSettled<T>(
+        iterable: Iterable<T | PromiseLike<T>>
+    ): RPromise<{ -readonly [P in keyof T]: PromiseSettledResult<Awaited<T[P]>> }> {
+        type RT = { -readonly [P in keyof T]: PromiseSettledResult<Awaited<T[P]>> };
+        return new RPromise<RT>((resolve, reject) => {
+            const values: Array<PromiseSettledResult<Awaited<T>>> = [];
+            let remainingElementsCount = 1; // start with 1 to handle the empty iterable case
+            let index = 0;
+
+            for (const item of iterable) {
+                const currentIndex = index++;
+                remainingElementsCount++;
+
+                RPromise.resolve(item).then(
+                    (value) => {
+                        values[currentIndex] = { status: "fulfilled", value };
+
+                        if (--remainingElementsCount === 0) {
+                            resolve(values as RT);
+                        }
+                    },
+                    (reason) => {
+                        values[currentIndex] = { status: "rejected", reason };
+
+                        if (--remainingElementsCount === 0) {
+                            resolve(values as RT);
+                        }
+                    }
+                );
+            }
+
+            if (--remainingElementsCount === 0) {
+                // decrement for the initial increment
+                resolve(values as RT);
+            }
+        });
+    }
+
+    static any<T>(iterable: Iterable<T | PromiseLike<T>>): RPromise<Awaited<T>> {
+        return new RPromise<Awaited<T>>((resolve, reject) => {
+            const errors: any[] = [];
+            let remainingElementsCount = 1; // start with 1 to handle the edge case of an empty iterable
+            let index = 0;
+
+            for (const item of iterable) {
+                const currentIndex = index++;
+                remainingElementsCount++;
+
+                RPromise.resolve(item).then(
+                    (value) => {
+                        resolve(value);
+                    },
+                    (reason) => {
+                        errors[currentIndex] = reason;
+
+                        if (--remainingElementsCount === 0) {
+                            reject(new AggregateError(errors, "All promises were rejected"));
+                        }
+                    }
+                );
+            }
+
+            if (--remainingElementsCount === 0) {
+                // decrement for the initial increment
+                reject(new AggregateError(errors, "All promises were rejected"));
+            }
+        });
+    }
+
+    static race<T>(iterable: Iterable<T | PromiseLike<T>>): RPromise<Awaited<T>> {
+        return new RPromise<Awaited<T>>((resolve, reject) => {
+            for (const item of iterable) {
+                RPromise.resolve(item).then(resolve, reject);
+            }
+        });
+    }
+
+    // unhandled rejections
     static addUnhandledRejectionCallback(callback: (ev: RPromiseRejectionEvent) => void) {
         if (typeof callback === "function") {
             onUnhandledRejectionList.push(callback);
@@ -248,3 +357,5 @@ function resolvePromise<T, U>(
         reject(e as U);
     }
 }
+
+Promise.allSettled;

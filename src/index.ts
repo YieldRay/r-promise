@@ -176,7 +176,12 @@ export class RPromise<T = any, U = any> {
     }
 }
 
-Reflect.set(RPromise.prototype, Symbol.toStringTag, RPromise.name);
+Object.defineProperty(RPromise.prototype, Symbol.toStringTag, {
+    writable: false,
+    enumerable: false,
+    configurable: true,
+    value: RPromise.name,
+});
 
 export interface RPromiseRejectionEvent<U = any> {
     readonly promise: RPromise<any, U>;
@@ -186,7 +191,10 @@ export interface RPromiseRejectionEvent<U = any> {
 const onUnhandledRejectionList: Array<(ev: RPromiseRejectionEvent) => void> = [];
 
 /**
- * returns x.then if x is thenable
+ * Returns `x.then` if `x` is [thenable](https://promisesaplus.com/#the-promise-resolution-procedure)
+ *
+ * Note that this is different from [ECMA262 IsPromise](https://tc39.es/ecma262/#sec-ispromise)
+ * as it rely on the language internal slot which only accept the standard Promise
  */
 function isThenable(x: unknown) {
     if (x !== null && (typeof x === "object" || typeof x === "function") && Reflect.has(x, "then")) {

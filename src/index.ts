@@ -7,25 +7,22 @@ type Thenable = {
     ) => Thenable;
 };
 
-export interface RPromiseRejectionEvent<U = any> {
-    readonly promise: RPromise<any, U>;
-    readonly reason: U;
-}
-
-const onUnhandledRejectionList: Array<(ev: RPromiseRejectionEvent) => void> = [];
-
 export class RPromise<T = any, U = any> {
     #value?: T = undefined;
     #reason?: U = undefined;
     #state: "pending" | "fulfilled" | "rejected" = "pending";
-    #onFulfilledList: Array<(value: T) => any> = [];
-    #onRejectList: Array<(reason: U) => any> = [];
+    #fulfillReactions: Array<(value: T) => any> = [];
+    #rejectReactions: Array<(reason: U) => any> = [];
 
     get status() {
         return this.#state;
     }
 
     constructor(executor: (resolve: (value: T) => void, reject: (reason: U) => void) => void) {
+        if (typeof executor !== "function") {
+            throw new TypeError(`RPromise resolver ${executor} is not a function`);
+        }
+
         const resolve = (value: T) => {
             if (value instanceof RPromise) {
                 value.then(resolve, reject);
@@ -36,7 +33,7 @@ export class RPromise<T = any, U = any> {
                 if (this.#state !== "pending") return;
                 this.#state = "fulfilled";
                 this.#value = value;
-                this.#onFulfilledList.forEach((onFulfilled) => onFulfilled(value));
+                this.#fulfillReactions.forEach((onFulfilled) => onFulfilled(value));
             });
         };
         const reject = (reason: U) => {
@@ -44,8 +41,8 @@ export class RPromise<T = any, U = any> {
                 if (this.#state !== "pending") return;
                 this.#state = "rejected";
                 this.#reason = reason;
-                this.#onRejectList.forEach((onRejected) => onRejected(reason));
-                if (this.#onRejectList.length === 0) {
+                this.#rejectReactions.forEach((onRejected) => onRejected(reason));
+                if (this.#rejectReactions.length === 0) {
                     // unhandledRejection callback
                     onUnhandledRejectionList.forEach((onUnhandledRejection) =>
                         onUnhandledRejection({
@@ -106,7 +103,7 @@ export class RPromise<T = any, U = any> {
             }
             case "pending": {
                 return (promise2 = new RPromise((resolve, reject) => {
-                    this.#onFulfilledList.push((value) => {
+                    this.#fulfillReactions.push((value) => {
                         try {
                             const x = onFulfilledCallback(value);
                             resolvePromise(promise2, x, resolve, reject);
@@ -114,7 +111,7 @@ export class RPromise<T = any, U = any> {
                             reject(r);
                         }
                     });
-                    this.#onRejectList.push((reason) => {
+                    this.#rejectReactions.push((reason) => {
                         try {
                             const x = onRejectedCallback(reason);
                             resolvePromise(promise2, x, resolve, reject);
@@ -166,7 +163,9 @@ export class RPromise<T = any, U = any> {
     }
 
     static addUnhandledRejectionCallback(callback: (ev: RPromiseRejectionEvent) => void) {
-        if (typeof callback === "function") onUnhandledRejectionList.push(callback);
+        if (typeof callback === "function") {
+            onUnhandledRejectionList.push(callback);
+        }
     }
     static removeUnhandledRejectionCallback(callback: (ev: RPromiseRejectionEvent) => void) {
         const index = onUnhandledRejectionList.indexOf(callback);
@@ -176,6 +175,15 @@ export class RPromise<T = any, U = any> {
         onUnhandledRejectionList.splice(0, onUnhandledRejectionList.length);
     }
 }
+
+Reflect.set(RPromise.prototype, Symbol.toStringTag, RPromise.name);
+
+export interface RPromiseRejectionEvent<U = any> {
+    readonly promise: RPromise<any, U>;
+    readonly reason: U;
+}
+
+const onUnhandledRejectionList: Array<(ev: RPromiseRejectionEvent) => void> = [];
 
 /**
  * returns x.then if x is thenable

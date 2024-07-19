@@ -1,5 +1,5 @@
 import { RPromise, RPromiseRejectionEvent } from "../src";
-import { describe, it } from "mocha";
+import { describe, it } from "node:test";
 import assert from "node:assert";
 
 type Callback = (ev: RPromiseRejectionEvent<any>) => void;

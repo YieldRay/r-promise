@@ -11,14 +11,12 @@
         "build": "rm -rf dist && tsc",
         "build-umd": "rollup -f umd --name r_promise -i dist/index.js -o dist/umd.js",
         "test": "tsx test/test.ts",
-        "test-unhandled": "mocha test/unhandled.ts --require ts-node/register"
+        "test-unhandled": "tsx test/unhandled.ts"
     },
     "devDependencies": {
-        "@types/mocha": "^10.0.6",
-        "@types/node": "^20.12.8",
+        "@types/node": "^20.14.11",
         "promises-aplus-tests": "^2.1.2",
-        "ts-node": "^10.9.2",
-        "tsx": "^4.9.1",
-        "typescript": "^5.4.5"
+        "tsx": "^4.16.2",
+        "typescript": "^5.5.3"
     }
 }

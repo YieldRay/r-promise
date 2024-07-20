@@ -1,5 +1,5 @@
 /**
- * A example polyfill for queueMicrotask(), this module is NOT side-effect free
+ * A example polyfill for `queueMicrotask()`, this module is NOT side-effect free
  *
  * For production, you may want to use polyfill from [core-js](https://github.com/zloirock/core-js/blob/master/packages/core-js/internals/microtask.js)
  */

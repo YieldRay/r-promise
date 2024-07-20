@@ -5,7 +5,7 @@ implementation that can pass [Promises/A+](https://promisesaplus.com/) tests
 
 > [!NOTE]  
 > Please note that Promise/A+ is slightly different from ECMA262 Promise, as the Promise/A+ cares more about the library interoperability.
-> We can even say that Promise/A+ is a superset of ECMA262 Promise.
+> We can mostly say that Promise/A+ is a superset of ECMA262 Promise.
 
 Most features of ECMAScript® 2025 have been implemented, including but not limited to:
 

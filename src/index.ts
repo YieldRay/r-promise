@@ -13,9 +13,13 @@ export class RPromise<T = any, U = any> {
     #state: "pending" | "fulfilled" | "rejected" = "pending";
     #fulfillReactions: Array<(value: T) => any> = [];
     #rejectReactions: Array<(reason: U) => any> = [];
+    #isHandled = false;
 
     get status() {
         return this.#state;
+    }
+    get isHandled() {
+        return this.#isHandled;
     }
 
     constructor(executor: (resolve: (value: T) => void, reject: (reason: U) => void) => void) {
@@ -43,7 +47,8 @@ export class RPromise<T = any, U = any> {
                 this.#reason = reason;
                 this.#rejectReactions.forEach((onRejected) => onRejected(reason));
                 if (this.#rejectReactions.length === 0) {
-                    // unhandledRejection callback
+                    // TODO: unhandledRejection callback
+                    // https://html.spec.whatwg.org/multipage/webappapis.html#unhandled-promise-rejections
                     onUnhandledRejectionList.forEach((onUnhandledRejection) =>
                         onUnhandledRejection({
                             promise: this,
@@ -60,7 +65,10 @@ export class RPromise<T = any, U = any> {
         }
     }
 
-    then<R = any, S = any>(onFulfilled?: (value: T) => R, onRejected?: (reason: U) => S) {
+    then<R = any, S = any>(
+        onFulfilled?: ((value: T) => R | PromiseLike<R>) | null,
+        onRejected?: ((reason: U) => S | PromiseLike<S>) | null
+    ) {
         const onFulfilledCallback =
             onFulfilled instanceof Function
                 ? onFulfilled.bind(undefined)
@@ -75,8 +83,29 @@ export class RPromise<T = any, U = any> {
                   };
 
         let promise2: RPromise;
+        this.#isHandled = true;
 
         switch (this.#state) {
+            case "pending": {
+                return (promise2 = new RPromise((resolve, reject) => {
+                    this.#fulfillReactions.push((value) => {
+                        try {
+                            const x = onFulfilledCallback(value);
+                            resolvePromise(promise2, x, resolve, reject);
+                        } catch (r) {
+                            reject(r);
+                        }
+                    });
+                    this.#rejectReactions.push((reason) => {
+                        try {
+                            const x = onRejectedCallback(reason);
+                            resolvePromise(promise2, x, resolve, reject);
+                        } catch (r) {
+                            reject(r);
+                        }
+                    });
+                }));
+            }
             case "fulfilled": {
                 return (promise2 = new RPromise((resolve, reject) => {
                     nextTick(() => {
@@ -101,31 +130,31 @@ export class RPromise<T = any, U = any> {
                     });
                 }));
             }
-            case "pending": {
-                return (promise2 = new RPromise((resolve, reject) => {
-                    this.#fulfillReactions.push((value) => {
-                        try {
-                            const x = onFulfilledCallback(value);
-                            resolvePromise(promise2, x, resolve, reject);
-                        } catch (r) {
-                            reject(r);
-                        }
-                    });
-                    this.#rejectReactions.push((reason) => {
-                        try {
-                            const x = onRejectedCallback(reason);
-                            resolvePromise(promise2, x, resolve, reject);
-                        } catch (r) {
-                            reject(r);
-                        }
-                    });
-                }));
-            }
         }
     }
 
-    catch<S>(onRejected?: (reason: U) => S) {
+    catch<S>(onRejected?: ((reason: U) => S | PromiseLike<S>) | null) {
         return this.then(undefined, onRejected);
+    }
+
+    finally(onFinally?: (() => void) | null): RPromise<T, U> {
+        const thenFinally =
+            onFinally instanceof Function
+                ? (value: T) => {
+                      return RPromise.resolve(onFinally()).then(() => value);
+                  }
+                : onFinally;
+
+        const catchFinally =
+            onFinally instanceof Function
+                ? (reason: U) => {
+                      return RPromise.resolve(onFinally()).then(() => {
+                          throw reason;
+                      });
+                  }
+                : onFinally;
+
+        return this.then(thenFinally, catchFinally);
     }
 
     static resolve<T>(value: T) {
@@ -139,8 +168,6 @@ export class RPromise<T = any, U = any> {
             reject(reason);
         });
     }
-
-    static promise = new RPromise(() => {});
 
     static withResolvers<T = any, U = any>() {
         let resolve: (value: T) => void;
@@ -305,7 +332,7 @@ const onUnhandledRejectionList: Array<(ev: RPromiseRejectionEvent) => void> = []
  * Note that this is different from [ECMA262 IsPromise](https://tc39.es/ecma262/#sec-ispromise)
  * as it rely on the language internal slot which only accept the standard Promise
  */
-function isThenable(x: unknown) {
+export function isThenable(x: unknown): Function | false {
     if (x !== null && (typeof x === "object" || typeof x === "function") && Reflect.has(x, "then")) {
         const then = Reflect.get(x, "then");
         if (typeof then === "function") return then.bind(x);
@@ -357,5 +384,3 @@ function resolvePromise<T, U>(
         reject(e as U);
     }
 }
-
-Promise.allSettled;

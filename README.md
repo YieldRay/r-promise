@@ -1,5 +1,7 @@
 # R-Promise
 
+[![ci](https://github.com/YieldRay/r-promise/actions/workflows/ci.yml/badge.svg)](https://github.com/YieldRay/r-promise/actions/workflows/ci.yml)
+
 A Typescript [Promise](https://tc39.es/ecma262/#sec-promise-objects)
 implementation that can pass [Promises/A+](https://promisesaplus.com/) tests
 

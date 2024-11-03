@@ -10,11 +10,13 @@
     "scripts": {
         "build": "rm -rf dist && tsc",
         "build:umd": "rollup -f umd --name r_promise -i dist/index.js -o dist/umd.js",
+        "test": "run-s test:*",
         "test:promise/a+": "tsx test/promises-aplus-tests.ts",
-        "test:misc": "tsx --test test/static.test.ts unhandled.test.ts"
+        "test:misc": "tsx --test test/static.test.ts test/unhandled.test.ts"
     },
     "devDependencies": {
         "@types/node": "^20.17.6",
+        "npm-run-all2": "^7.0.1",
         "promises-aplus-tests": "^2.1.2",
         "tsx": "^4.19.2",
         "typescript": "^5.6.3"

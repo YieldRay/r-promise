@@ -158,6 +158,7 @@ export class RPromise<T = any, U = any> {
     }
 
     static resolve<T>(value: T) {
+        if (value instanceof RPromise) return value;
         return new RPromise((resolve, _) => {
             resolve(value);
         });
@@ -333,7 +334,11 @@ const onUnhandledRejectionList: Array<(ev: RPromiseRejectionEvent) => void> = []
  * as it rely on the language internal slot which only accept the standard Promise
  */
 export function isThenable(x: unknown): Function | false {
-    if (x !== null && (typeof x === "object" || typeof x === "function") && Reflect.has(x, "then")) {
+    if (
+        x !== null &&
+        (typeof x === "object" || typeof x === "function") &&
+        Reflect.has(x, "then")
+    ) {
         const then = Reflect.get(x, "then");
         if (typeof then === "function") return then.bind(x);
 

@@ -14,9 +14,9 @@
         "test:misc": "tsx --test test/static.test.ts unhandled.test.ts"
     },
     "devDependencies": {
-        "@types/node": "^20.14.11",
+        "@types/node": "^20.17.6",
         "promises-aplus-tests": "^2.1.2",
-        "tsx": "^4.16.2",
-        "typescript": "^5.5.3"
+        "tsx": "^4.19.2",
+        "typescript": "^5.6.3"
     }
 }

@@ -26,17 +26,22 @@ if (typeof queueMicrotask === "function") {
             new Promise<void>((resolve) => resolve()).then(callback);
         };
     }
-} else if (typeof process === "object" && typeof process.nextTick === "function") {
+} else if (
+    typeof process === "object" &&
+    typeof process.nextTick === "function"
+) {
     // node.js
     nextTick = process.nextTick;
 } else if (
     typeof window === "object" &&
-    (typeof window.MutationObserver === "function" || typeof window.WebKitMutationObserver === "function")
+    (typeof window.MutationObserver === "function" ||
+        typeof window.WebKitMutationObserver === "function")
 ) {
     // browser
     let counter = 0;
-    const tasks: Array<VoidFunction> = []; // task queue
-    const observer = new (window.MutationObserver || window.WebKitMutationObserver)(() => {
+    const tasks: VoidFunction[] = []; // task queue
+    const observer = new (window.MutationObserver ||
+        window.WebKitMutationObserver)(() => {
         for (const task of tasks) {
             task();
         }
@@ -50,7 +55,7 @@ if (typeof queueMicrotask === "function") {
             (task = () => {
                 callback();
                 tasks.splice(tasks.indexOf(task), 1);
-            })
+            }),
         );
         // run task
         counter = (counter + 1) % 2;

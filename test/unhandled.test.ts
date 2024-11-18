@@ -1,12 +1,12 @@
-import { RPromise, RPromiseRejectionEvent } from "../src";
+import { RPromise } from "../src/index";
+import type { RPromiseRejectionEvent } from "../src/types";
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
-type Callback = (ev: RPromiseRejectionEvent<any>) => void;
 describe("RPromise.addUnhandledRejectionCallback", function () {
     it("unhandled RPromise with 1 callback", async function () {
         return new Promise<void>((resolve) => {
-            const cb: Callback = ({ promise, reason }) => {
+            const cb = ({ promise, reason }: RPromiseRejectionEvent) => {
                 assert.equal(promise, p);
                 assert.equal(reason, "unhandled1");
                 RPromise.removeUnhandledRejectionCallback(cb);
@@ -30,13 +30,13 @@ describe("RPromise.addUnhandledRejectionCallback", function () {
                     resolve();
                 }
             };
-            const cb1: Callback = ({ promise, reason }) => {
+            const cb1 = ({ promise, reason }: RPromiseRejectionEvent) => {
                 assert.equal(promise, p);
                 assert.equal(reason, "unhandled2");
                 map.cb1 = true;
                 ok();
             };
-            const cb2: Callback = ({ promise, reason }) => {
+            const cb2 = ({ promise, reason }: RPromiseRejectionEvent) => {
                 assert.equal(promise, p);
                 assert.equal(reason, "unhandled2");
                 map.cb2 = true;

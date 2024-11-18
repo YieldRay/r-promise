@@ -1,16 +1,28 @@
+/**
+ * TODO: take a look at test262
+ * https://github.com/tc39/test262/tree/main/test/built-ins/Promise
+ */
 import { RPromise } from "../src";
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
 describe("RPromise.all", () => {
     it("should resolve when all promises resolve", async () => {
-        const promises = [RPromise.resolve(1), RPromise.resolve(2), RPromise.resolve(3)];
+        const promises = [
+            RPromise.resolve(1),
+            RPromise.resolve(2),
+            RPromise.resolve(3),
+        ];
         const result = await RPromise.all(promises);
         assert.deepStrictEqual(result, [1, 2, 3]);
     });
 
     it("should reject when any promise rejects", async () => {
-        const promises = [RPromise.resolve(1), RPromise.reject(new Error("Failed")), RPromise.resolve(3)];
+        const promises = [
+            RPromise.resolve(1),
+            RPromise.reject(new Error("Failed")),
+            RPromise.resolve(3),
+        ];
         try {
             await RPromise.all(promises);
             assert.fail("Expected RPromise.all to reject");
@@ -22,7 +34,11 @@ describe("RPromise.all", () => {
 
 describe("RPromise.allSettled", () => {
     it("should resolve with an array of results when all promises resolve", async () => {
-        const promises = [RPromise.resolve(1), RPromise.resolve(2), RPromise.resolve(3)];
+        const promises = [
+            RPromise.resolve(1),
+            RPromise.resolve(2),
+            RPromise.resolve(3),
+        ];
         const result = await RPromise.allSettled(promises);
         assert.deepStrictEqual(result, [
             { status: "fulfilled", value: 1 },
@@ -32,7 +48,11 @@ describe("RPromise.allSettled", () => {
     });
 
     it("should resolve with an array of results when some promises reject", async () => {
-        const promises = [RPromise.resolve(1), RPromise.reject(new Error("Failed")), RPromise.resolve(3)];
+        const promises = [
+            RPromise.resolve(1),
+            RPromise.reject(new Error("Failed")),
+            RPromise.resolve(3),
+        ];
         const result = await RPromise.allSettled(promises);
         assert.deepStrictEqual(result, [
             { status: "fulfilled", value: 1 },
@@ -44,7 +64,11 @@ describe("RPromise.allSettled", () => {
 
 describe("RPromise.any", () => {
     it("should resolve with the first resolved promise", async () => {
-        const promises = [RPromise.reject(new Error("Failed")), RPromise.resolve(2), RPromise.resolve(3)];
+        const promises = [
+            RPromise.reject(new Error("Failed")),
+            RPromise.resolve(2),
+            RPromise.resolve(3),
+        ];
         const result = await RPromise.any(promises);
         assert.strictEqual(result, 2);
     });
@@ -78,9 +102,15 @@ describe("RPromise.race", () => {
 
     it("should reject with the first rejected promise", async () => {
         const promises = [
-            new RPromise((resolve, reject) => setTimeout(() => reject(new Error("Failed 1")), 100)),
-            new RPromise((resolve, reject) => setTimeout(() => reject(new Error("Failed 2")), 50)),
-            new RPromise((resolve, reject) => setTimeout(() => reject(new Error("Failed 3")), 200)),
+            new RPromise((resolve, reject) =>
+                setTimeout(() => reject(new Error("Failed 1")), 100),
+            ),
+            new RPromise((resolve, reject) =>
+                setTimeout(() => reject(new Error("Failed 2")), 50),
+            ),
+            new RPromise((resolve, reject) =>
+                setTimeout(() => reject(new Error("Failed 3")), 200),
+            ),
         ];
         try {
             await RPromise.race(promises);

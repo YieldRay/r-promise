@@ -15,6 +15,7 @@ Most features of ECMAScript® 2025 have been implemented, including but not limi
 -   RPromise.allSettled
 -   RPromise.any
 -   RPromise.race
+-   RPromise.try
 -   RPromise.withResolvers
 -   Unhandled Rejection Callbacks
 

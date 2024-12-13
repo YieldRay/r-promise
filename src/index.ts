@@ -90,14 +90,14 @@ export class RPromise<T = any> implements Thenable<T> {
             onFulfilled instanceof Function
                 ? onFulfilled.bind(undefined)
                 : // `R` is `T` when `onFulfilled` is not provided, so `T` is `Awaitable<R>` here
-                  (((v) => v) as (value: T) => Awaitable<R>);
+                (((v) => v) as (value: T) => Awaitable<R>);
 
         const onRejectedCallback =
             onRejected instanceof Function
                 ? onRejected.bind(undefined)
                 : <T>(r: T) => {
-                      throw r;
-                  };
+                    throw r;
+                };
 
         let promise2: RPromise<R | S>;
         this.#isHandled = true;
@@ -158,17 +158,17 @@ export class RPromise<T = any> implements Thenable<T> {
         const thenFinally =
             onFinally instanceof Function
                 ? (value: T) => {
-                      return RPromise.resolve(onFinally()).then(() => value);
-                  }
+                    return RPromise.resolve(onFinally()).then(() => value);
+                }
                 : onFinally;
 
         const catchFinally =
             onFinally instanceof Function
                 ? (reason: unknown) => {
-                      return RPromise.resolve(onFinally()).then(() => {
-                          throw reason;
-                      });
-                  }
+                    return RPromise.resolve(onFinally()).then(() => {
+                        throw reason;
+                    });
+                }
                 : onFinally;
 
         return this.then(thenFinally, catchFinally);
@@ -201,6 +201,18 @@ export class RPromise<T = any> implements Thenable<T> {
             // @ts-expect-error
             reject,
         };
+    }
+
+    static try<T, Args extends unknown[]>(func: (...args: Args) => Awaitable<T>, ...args: Args): RPromise<T> {
+        return new RPromise<T>((resolve, reject) => {
+            try {
+                if (typeof func !== 'function') throw new TypeError(`${func} is not a function`)
+                const result = func.apply(undefined, args)
+                resolve(result)
+            } catch (err) {
+                reject(err)
+            }
+        })
     }
 
     static all<T>(

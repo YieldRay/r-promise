@@ -25,19 +25,19 @@ export class RPromise<T = any> implements Thenable<T> {
     constructor(
         executor: (
             resolve: (value: Awaitable<T>) => void,
-            reject: (reason: unknown) => void,
-        ) => void,
+            reject: (reason: unknown) => void
+        ) => void
     ) {
         if (typeof executor !== "function") {
             throw new TypeError(
-                `RPromise resolver ${executor} is not a function`,
+                `RPromise resolver ${executor} is not a function`
             );
         }
 
         const resolve = (_value: Awaitable<T>) => {
             // NOTE: this step is NOT required by Promise/A+
             if (_value instanceof RPromise) {
-                // to pass the Promise/A+, DO NOT use `isThenable` here
+                // in order to pass the Promise/A+, DO NOT use `isThenable` here
                 _value.then(resolve, reject);
                 return;
             }
@@ -49,7 +49,7 @@ export class RPromise<T = any> implements Thenable<T> {
                 this.#state = "fulfilled";
                 this.#value = value;
                 this.#fulfillReactions.forEach((onFulfilled) =>
-                    onFulfilled(value),
+                    onFulfilled(value)
                 );
             });
         };
@@ -60,7 +60,7 @@ export class RPromise<T = any> implements Thenable<T> {
                 this.#state = "rejected";
                 this.#reason = reason;
                 this.#rejectReactions.forEach((onRejected) =>
-                    onRejected(reason),
+                    onRejected(reason)
                 );
                 if (this.#rejectReactions.length === 0) {
                     // TODO: unhandledRejection callback
@@ -69,7 +69,7 @@ export class RPromise<T = any> implements Thenable<T> {
                         onUnhandledRejection({
                             promise: this,
                             reason,
-                        }),
+                        })
                     );
                 }
             });
@@ -84,20 +84,20 @@ export class RPromise<T = any> implements Thenable<T> {
 
     then<R = T, S = never>(
         onFulfilled?: ((value: T) => Awaitable<R>) | null,
-        onRejected?: ((reason: unknown) => Awaitable<S>) | null,
+        onRejected?: ((reason: unknown) => Awaitable<S>) | null
     ): RPromise<R | S> {
         const onFulfilledCallback =
             onFulfilled instanceof Function
                 ? onFulfilled.bind(undefined)
                 : // `R` is `T` when `onFulfilled` is not provided, so `T` is `Awaitable<R>` here
-                (((v) => v) as (value: T) => Awaitable<R>);
+                  (((v) => v) as (value: T) => Awaitable<R>);
 
         const onRejectedCallback =
             onRejected instanceof Function
                 ? onRejected.bind(undefined)
                 : <T>(r: T) => {
-                    throw r;
-                };
+                      throw r;
+                  };
 
         let promise2: RPromise<R | S>;
         this.#isHandled = true;
@@ -158,17 +158,17 @@ export class RPromise<T = any> implements Thenable<T> {
         const thenFinally =
             onFinally instanceof Function
                 ? (value: T) => {
-                    return RPromise.resolve(onFinally()).then(() => value);
-                }
+                      return RPromise.resolve(onFinally()).then(() => value);
+                  }
                 : onFinally;
 
         const catchFinally =
             onFinally instanceof Function
                 ? (reason: unknown) => {
-                    return RPromise.resolve(onFinally()).then(() => {
-                        throw reason;
-                    });
-                }
+                      return RPromise.resolve(onFinally()).then(() => {
+                          throw reason;
+                      });
+                  }
                 : onFinally;
 
         return this.then(thenFinally, catchFinally);
@@ -192,31 +192,35 @@ export class RPromise<T = any> implements Thenable<T> {
             reject = _reject;
         });
 
-        // executor(promise constructor callback) is immediately invoked (in sync)
+        // executor (promise constructor callback) is immediately invoked (in sync)
         // so `resolve` and `reject` are correctly assigned
         return {
             promise,
-            // @ts-expect-error
+            // @ts-ignore
             resolve,
-            // @ts-expect-error
+            // @ts-ignore
             reject,
         };
     }
 
-    static try<T, Args extends unknown[]>(func: (...args: Args) => Awaitable<T>, ...args: Args): RPromise<T> {
+    static try<T, Args extends unknown[]>(
+        func: (...args: Args) => Awaitable<T>,
+        ...args: Args
+    ): RPromise<T> {
         return new RPromise<T>((resolve, reject) => {
             try {
-                if (typeof func !== 'function') throw new TypeError(`${func} is not a function`)
-                const result = func.apply(undefined, args)
-                resolve(result)
+                if (typeof func !== "function")
+                    throw new TypeError(`${func} is not a function`);
+                const result = func.apply(undefined, args);
+                resolve(result);
             } catch (err) {
-                reject(err)
+                reject(err);
             }
-        })
+        });
     }
 
     static all<T>(
-        iterable: Iterable<Awaitable<T>>,
+        iterable: Iterable<Awaitable<T>>
     ): RPromise<Array<Awaited<T>>> {
         return new RPromise<Array<Awaited<T>>>((resolve, reject) => {
             const values: Array<Awaited<T>> = [];
@@ -237,7 +241,7 @@ export class RPromise<T = any> implements Thenable<T> {
                     },
                     (reason) => {
                         reject(reason);
-                    },
+                    }
                 );
             }
 
@@ -249,7 +253,7 @@ export class RPromise<T = any> implements Thenable<T> {
     }
 
     static allSettled<T>(
-        iterable: Iterable<Awaitable<T>>,
+        iterable: Iterable<Awaitable<T>>
     ): RPromise<RPromiseSettledResult<Awaited<T>>[]> {
         return new RPromise<RPromiseSettledResult<Awaited<T>>[]>((resolve) => {
             const values: Array<RPromiseSettledResult<Awaited<T>>> = [];
@@ -274,7 +278,7 @@ export class RPromise<T = any> implements Thenable<T> {
                         if (--remainingElementsCount === 0) {
                             resolve(values);
                         }
-                    },
+                    }
                 );
             }
 
@@ -306,18 +310,18 @@ export class RPromise<T = any> implements Thenable<T> {
                             reject(
                                 new AggregateError(
                                     errors,
-                                    "All promises were rejected",
-                                ),
+                                    "All promises were rejected"
+                                )
                             );
                         }
-                    },
+                    }
                 );
             }
 
             if (--remainingElementsCount === 0) {
                 // decrement for the initial increment
                 reject(
-                    new AggregateError(errors, "All promises were rejected"),
+                    new AggregateError(errors, "All promises were rejected")
                 );
             }
         });
@@ -333,7 +337,7 @@ export class RPromise<T = any> implements Thenable<T> {
 
     // unhandled rejections
     static addUnhandledRejectionCallback(
-        callback: (ev: RPromiseRejectionEvent) => void,
+        callback: (ev: RPromiseRejectionEvent) => void
     ) {
         if (typeof callback === "function") {
             onUnhandledRejectionList.push(callback);
@@ -341,7 +345,7 @@ export class RPromise<T = any> implements Thenable<T> {
     }
 
     static removeUnhandledRejectionCallback(
-        callback: (ev: RPromiseRejectionEvent) => void,
+        callback: (ev: RPromiseRejectionEvent) => void
     ) {
         const index = onUnhandledRejectionList.indexOf(callback);
         if (index > -1) onUnhandledRejectionList.splice(index, 1);
@@ -392,7 +396,7 @@ function resolvePromise<T>(
     promise2: RPromise<T>,
     value2: Awaitable<T>,
     resolve: (value: Awaitable<T>) => void,
-    reject: (reason: unknown) => void,
+    reject: (reason: unknown) => void
 ) {
     if (value2 === promise2) {
         throw new TypeError("Chaining cycle detected for promise #<RPromise>");
@@ -413,7 +417,7 @@ function resolvePromise<T>(
                     if (thenCalledOrThrow) return;
                     thenCalledOrThrow = true;
                     return reject(reason);
-                },
+                }
             );
         } else {
             resolve(value2);

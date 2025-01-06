@@ -11,13 +11,13 @@ implementation that can pass [Promises/A+](https://promisesaplus.com/) tests
 
 Most features of ECMAScript® 2025 have been implemented, including but not limited to:
 
-- RPromise.all
-- RPromise.allSettled
-- RPromise.any
-- RPromise.race
-- RPromise.try
-- RPromise.withResolvers
-- Unhandled Rejection Callbacks
+-   RPromise.all
+-   RPromise.allSettled
+-   RPromise.any
+-   RPromise.race
+-   RPromise.try
+-   RPromise.withResolvers
+-   Unhandled Rejection Callbacks
 
 > [!NOTE]  
 > Promise/A+ is slightly different from ECMA262 Promise, as the Promise/A+ cares more about the library interoperability.  

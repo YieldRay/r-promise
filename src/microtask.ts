@@ -55,7 +55,7 @@ if (typeof queueMicrotask === "function") {
             (task = () => {
                 callback();
                 tasks.splice(tasks.indexOf(task), 1);
-            }),
+            })
         );
         // run task
         counter = (counter + 1) % 2;
